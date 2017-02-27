@@ -99,16 +99,16 @@ typedef std::pair<vector<CITY>, double> city_value;
 through each of the middle cities) as well as the path */ 
 
 pair<vector<CITY>, double> get_TSP(CITY start, vector<CITY> allcities) {
-	map<city_key, city_value> stored_paths; // storing keys and values to subproblems
+	map<city_key, city_value> stored_paths;
 	vector<vector<CITY>> all_subsets = gen_subsets(allcities);
 
 	/* Our plan is to tackle subproblems and store those results into our map.
 	We will divide them based on subset size so we always have the answers to smaller subproblems
-	in our map. 
+	in our map.
 	*/
 
 	for (int i = 1; i <= allcities.size(); i++) {
-		vector<vector<CITY>> subsets = subsets_k(all_subsets, i); 
+		vector<vector<CITY>> subsets = subsets_k(all_subsets, i);
 		if (i == 1) {
 			/* initialize our map by considering subsets of size 1. The min-distance from the start city
 			to any given city is just the distance between cities (no middle cities) */
@@ -121,29 +121,93 @@ pair<vector<CITY>, double> get_TSP(CITY start, vector<CITY> allcities) {
 				stored_paths.insert(make_pair(key, value)); // yay fixed!!! :) 
 			}
 		}
+		else {
+			/* For subsets greater than 1, we first choose an end city. We then figure out the min path
+			from start to the end city through the rest of the cities in the subset, by iterating through
+			every possible second-to-last city, and taking the min distance of all possible choices. We
+			then update our map with these values for future use
+			*/
+			for (int j = 0; j < subsets.size(); j++) {
+				for (int k = 0; k < subsets[j].size(); k++) {
+					CITY endcity = subsets[j][k]; //choose end city
+					CITY best_secondlast; // keep track of best second-last city and best distance
+					double best_dist = 100000000000; //bad way to do this, could initialize to first seen
+					vector<CITY> best_path;
+					vector<CITY> one_less = subsets[j]; 
+					one_less.erase(one_less.begin() + k); // take out end city, left with middle cities
+
+					for (int l = 0; l < one_less.size(); l++) {
+						vector<CITY> rest_of_cities = one_less;
+						CITY secondlast = rest_of_cities[l]; //iterate through all possible choices
+						rest_of_cities.erase(rest_of_cities.begin() + l);
+						city_key check_key = make_pair(rest_of_cities, secondlast); //checking subproblem
+						city_value v = stored_paths[check_key];
+						// v.first holds the path, v.second holds the distance
+						double dist_tolast = city_dist(secondlast, endcity);
+						double total_dist = v.second + dist_tolast;
+
+						// we update the best_path and best_dist if it is smaller 
+						if (total_dist < best_dist) {
+							best_dist = total_dist;
+							best_secondlast = secondlast;
+							best_path = v.first;
+						}
+					}
+					// store the result of this problem for future use 
+					city_key key = make_pair(one_less, endcity);
+					best_path.push_back(best_secondlast);
+					city_value value = make_pair(best_path, best_dist);
+					stored_paths.insert(make_pair(key, value));
+				}
+			}
+
+		}
 	}
-	pair<vector<CITY>, double> result = make_pair(allcities, 42.0);
-	return result; // doesn't mean anything 
+
+	double overall_best = 1000000000; // again bad way to do this 
+	vector<CITY> best_path;
+
+	//* We now have solved all subproblems, and just need to iterate through all possible last cities.
+	for (int i = 0; i < allcities.size(); i++) {
+		vector<CITY> rest = allcities;
+		CITY lastcity = allcities[i];
+		rest.erase(rest.begin() + i);
+		city_value v = stored_paths[make_pair(rest, lastcity)];
+		vector<CITY> curr_path = v.first;
+		curr_path.push_back(lastcity);
+		double end_to_start = city_dist(lastcity, start);
+		double total_dist = v.second + end_to_start;
+
+		//update if this distance is smaller 
+		if (total_dist < overall_best) {
+			overall_best = total_dist;
+			best_path = curr_path;
+		}
+	}
+	best_path.push_back(start);
+	return make_pair(best_path, overall_best);
 }
 
 int main()
 {
-	make_cities(42);
+	make_cities(7); //takes a while on larger inputs 
+
+	//create a random starting location with city num 0
 	CITY s = new_city(0, rand() % surface_size + 1, rand() % surface_size + 1);
 
-	//vector<vector<CITY>> subsets;
-	//vector<CITY> test;
-	//subsets = gen_subsets(test);
 
-	/*for (int i = 0; i < subsets.size(); i++) {
-	for (int j = 0; j < subsets[i].size();j++) {
-	cout << subsets[i][j].num;
+	pair<vector<CITY>, double> result = get_TSP(s, cities);
+
+	cout << "The total distance is: " << result.second << "\n";
+	
+	vector<CITY> path = result.first;
+	cout << "The order of cities is ";
+	for (int i = 0; i < path.size(); i++) {
+		cout << path[i].num << " ";
 	}
 	cout << "\n";
-	} */
-
-	for (int i = 0; i < cities.size(); i++) {
+	/*for (int i = 0; i < cities.size(); i++) {
 		cout << cities[i].num << " " << cities[i].x << " " << cities[i].y << "\n";
-	}
-	return 0;
+	} */
+	return 0; 
 }
