@@ -89,6 +89,39 @@ vector<vector<CITY>> subsets_k(vector<vector<CITY>> allcities, int k) {
 	return subsets;
 }
 
+typedef std::pair<vector<CITY>, CITY> city_key; // key is (vector of middle cities, endcity)
+typedef std::pair<vector<CITY>, double> city_value; 
+/* value is a pair which returns the mininum distance from the start city to the end city (traversing 
+through each of the middle cities) as well as the path */ 
+
+pair<vector<CITY>, double> get_TSP(CITY start, vector<CITY> allcities) {
+	map<city_key, city_value> stored_paths; // storing keys and values to subproblems
+	vector<vector<CITY>> all_subsets = gen_subsets(allcities);
+
+	/* Our plan is to tackle subproblems and store those results into our map.
+	We will divide them based on subset size so we always have the answers to smaller subproblems
+	in our map. 
+	*/
+
+	for (int i = 1; i <= allcities.size(); i++) {
+		vector<vector<CITY>> subsets = subsets_k(all_subsets, i); 
+		if (i == 1) {
+			/* initialize our map by considering subsets of size 1. The min-distance from the start city
+			to any given city is just the distance between cities (no middle cities) */
+			for (int j = 0; j < subsets.size(); j++) {
+				vector<CITY> Empty;
+				vector<CITY> path;
+				path.push_back(start);
+				city_key key = make_pair(Empty, subsets[j][0]);
+				city_value value = make_pair(path, city_dist(start, subsets[j][0]));
+				stored_paths.insert(make_pair(key, value)); // line still doesn't compile 
+			}
+		}
+	}
+	pair<vector<CITY>, double> result = make_pair(allcities, 42.0);
+	return result; // doesn't mean anything 
+}
+
 int main()
 {
 	make_cities(42);
