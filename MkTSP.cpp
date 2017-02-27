@@ -56,10 +56,54 @@ double city_dist(CITY a, CITY b) {
 	return sqrt(pow((a.x - b.x), 2) + pow((a.y - b.y), 2));
 }
 
+// returns  the powerset of a given set of cities 
+vector<vector<CITY>> gen_subsets(vector<CITY> all_cities) {
+	vector<vector<CITY>> subsets;
+	vector<CITY> Empty;
+	subsets.push_back(Empty);
+
+	for (int i = 0; i < all_cities.size(); i++) {
+		/* for each iteration, create a clone of the current subset and add the next
+		element to every subset. then we combine the subsets with the element and the
+		subsets without */ 
+
+		vector<vector<CITY>> clone = subsets;
+		for (int j = 0; j < clone.size(); j++) {
+			clone[j].push_back(all_cities[i]);
+		}
+		for (int k = 0; k < clone.size(); k++) {
+			subsets.push_back(clone[k]);
+		}
+	}
+	return subsets;
+}
+
+// returns all subsets that have the given size k 
+vector<vector<CITY>> subsets_k(vector<vector<CITY>> allcities, int k) {
+	vector<vector<CITY>> subsets;
+	for (int i = 0; i < allcities.size(); i++) {
+		if (allcities[i].size() == k) {
+			subsets.push_back(allcities[i]);
+		}
+	}
+	return subsets;
+}
+
 int main()
 {
 	make_cities(42);
 	CITY s = new_city(0, rand() % surface_size + 1, rand() % surface_size + 1);
+
+	//vector<vector<CITY>> subsets;
+	//vector<CITY> test;
+	//subsets = gen_subsets(test);
+
+	/*for (int i = 0; i < subsets.size(); i++) {
+	for (int j = 0; j < subsets[i].size();j++) {
+	cout << subsets[i][j].num;
+	}
+	cout << "\n";
+	} */
 
 	for (int i = 0; i < cities.size(); i++) {
 		cout << cities[i].num << " " << cities[i].x << " " << cities[i].y << "\n";
