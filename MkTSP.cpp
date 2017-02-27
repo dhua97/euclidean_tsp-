@@ -17,6 +17,10 @@ typedef struct CITY {
 	int y;
 } CITY;
 
+bool operator< (CITY a, CITY b) { return a.num < b.num; }
+/* needed to use structs as keys in map? OHHH its because maps are implemented as BSTs,
+so if you don't specify comparison function for the struct it'll break */
+
 // creates new city 
 CITY new_city(int n, int xcoord, int ycoord) {
 	CITY c;
@@ -114,7 +118,7 @@ pair<vector<CITY>, double> get_TSP(CITY start, vector<CITY> allcities) {
 				path.push_back(start);
 				city_key key = make_pair(Empty, subsets[j][0]);
 				city_value value = make_pair(path, city_dist(start, subsets[j][0]));
-				stored_paths.insert(make_pair(key, value)); // line still doesn't compile 
+				stored_paths.insert(make_pair(key, value)); // yay fixed!!! :) 
 			}
 		}
 	}
